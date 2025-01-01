@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use diesel::prelude::*;
-use crate::schema::events;
+use diesel::{prelude::*};
+use crate::schema::{events, users};
 use diesel::{result::Error};
 use chrono::{NaiveDateTime};
 
@@ -42,6 +42,25 @@ impl Event {
 
     pub fn all(conn: &mut PgConnection) -> Result<Vec<Event>, Error> {
         let q_result = events::table.load(conn);
+
+        match q_result {
+            Ok(result) => {
+                Ok(result)
+            },
+            Err(e) => {
+                Err(Error::from(e))
+            }
+        }
+    }
+
+    pub fn total_meters_for_event(conn: &mut PgConnection, id: i32) -> Result<i64, Error> {
+        _ = events::table.find(id).first::<Event>(conn).map_err(|e| Error::from(e));
+
+        let q_result = users::table
+            .filter(users::event_id.eq(id))
+            .select(diesel::dsl::sum(users::total_meters))
+            .first::<Option<i64>>(conn)
+            .map(|opt| opt.unwrap_or(0));
 
         match q_result {
             Ok(result) => {

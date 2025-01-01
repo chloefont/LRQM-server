@@ -2,8 +2,8 @@ use std::{sync::{Arc, Mutex}, thread};
 
 use axum::Router;
 use db::DbApi;
-mod api_mobile;
-mod api_config;
+mod api_users;
+mod api_events;
 mod models;
 mod db;
 pub mod schema;
@@ -33,7 +33,8 @@ async fn main() {
     }));
 
     let router = Router::new()
-        .merge(api_config::stage(shared_state));
+        .merge(api_events::stage(shared_state.clone()))
+        .merge(api_users::stage(shared_state.clone()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, router).await.unwrap();
