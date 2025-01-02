@@ -1,14 +1,11 @@
+use std::error::Error;
+
 use serde::{Deserialize, Serialize};
-use diesel::prelude::*;
-use crate::schema::users;
-use diesel::{result::Error};
+use sqlx::PgPool;
 use crate::models::event::Event;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Associations)]
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::users)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(belongs_to(Event))]
+
+#[derive(Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -16,9 +13,9 @@ pub struct User {
     pub event_id: i32,
     pub total_meters: i32
 }
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[derive(Insertable)]
-#[diesel(table_name = crate::schema::users)]
+
+
+#[derive(Serialize, Deserialize)]
 pub struct NewUser {
     pub username: String,
     pub bib_id: String,
@@ -27,37 +24,52 @@ pub struct NewUser {
 }
 
 impl User {
-    pub fn all(conn: &mut PgConnection) -> Result<Vec<User>, Error> {
+    pub async fn all(pool: &PgPool) -> Result<Vec<User>, Box<dyn Error>> {
         // users::table.load::<User>(&*connection).expect("Error loading users")
-        let q_result = users::table.load(conn);
+        let result = sqlx::query!(
+            "
+            SELECT u.id, u.username, u.bib_id, u.event_id, u.total_meters
+            FROM users u
+            "
+        ).fetch_all(pool).await?;
 
-        match q_result {
-            Ok(result) => {
-                Ok(result)
-            },
-            Err(e) => {
-                Err(Error::from(e))
-            }
-        }
+        Ok(result
+            .into_iter()
+            .map(|user| User{
+                id: user.id,
+                username: user.username,
+                bib_id: user.bib_id,
+                event_id: user.event_id,
+                total_meters: user.total_meters
+            }).collect()
+        )
     }
 
-    pub fn create(
-        conn: &mut PgConnection, 
+    pub async fn create(
+        pool: &PgPool, 
         username: String, 
         bib_id: String, 
-        event: Event,
+        event_id: i32,
         total_meters: Option<i32>
-    ) -> Result<User, Error> {
-        let new_user = NewUser {
-            total_meters: total_meters,
-            username: username,
-            bib_id: bib_id,
-            event_id: event.id
-        };
+    ) -> Result<User, Box<dyn Error>> {
+        let user = sqlx::query!(
+            "
+            INSERT INTO users (username, bib_id, event_id, total_meters)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, username, bib_id, event_id, total_meters
+            ",
+            username,
+            bib_id,
+            event_id,
+            total_meters.unwrap_or_default()
+        ).fetch_one(pool).await?;
 
-        diesel::insert_into(users::table)
-            .values(&new_user)
-            .returning(User::as_returning())
-            .get_result(conn)
+        Ok(User{
+            id: user.id,
+            username: user.username,
+            bib_id: user.bib_id,
+            event_id: user.event_id,
+            total_meters: user.total_meters
+        })
     }
 }
