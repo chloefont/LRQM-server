@@ -66,23 +66,6 @@ impl Event {
     }
 
     pub async fn total_meters_for_event(pool: &PgPool, id: i32) -> Result<i64, Box<dyn Error>> {
-        // _ = events::table.find(id).first::<Event>(conn).map_err(|e| Error::from(e));
-
-        // let q_result = users::table
-        //     .filter(users::event_id.eq(id))
-        //     .select(diesel::dsl::sum(users::total_meters))
-        //     .first::<Option<i64>>(conn)
-        //     .map(|opt| opt.unwrap_or(0));
-
-        // match q_result {
-        //     Ok(result) => {
-        //         Ok(result)
-        //     },
-        //     Err(e) => {
-        //         Err(Error::from(e))
-        //     }
-        // }
-
         let event_total_meters = sqlx::query!(
             "
             SELECT SUM(u.total_meters)

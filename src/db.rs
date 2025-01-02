@@ -1,4 +1,3 @@
-use dotenvy::dotenv;
 use std::env;
 use sqlx::{postgres::PgPoolOptions, Error, Pool, Postgres};
 
