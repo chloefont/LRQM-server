@@ -7,6 +7,7 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 mod api_users;
 mod api_events;
+mod api_measures;
 mod models;
 mod db;
 
@@ -34,7 +35,8 @@ async fn main() {
 
     let router = Router::new()
         .merge(api_events::stage(app_state.clone()))
-        .merge(api_users::stage(app_state))
+        .merge(api_users::stage(app_state.clone()))
+        .merge(api_measures::stage(app_state.clone()))
         .layer(TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<_>| {
             tracing::info_span!(
                 "request",

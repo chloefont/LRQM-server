@@ -1,4 +1,4 @@
-use crate::models::{Event, NewEvent};
+use crate::models::{Event, NewEvent, EventTotalMeters};
 use crate::{AppState};
 use axum::extract::{Json, Path, State};
 use axum::http::StatusCode;
@@ -32,8 +32,11 @@ async fn events_list(State(state): State<AppState>) -> Result<Json<Vec<Event>>, 
     Ok(Json(events))
 }
 
-async fn event_total_meters(Path(event_id): Path<i32>, State(state): State<AppState>) -> Result<Json<i64>, (StatusCode, String)> {
-    let event_total_meters = Event::total_meters_for_event(&state.db.pool, event_id).await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Oh noo !".to_string()))?;
+async fn event_total_meters(State(state): State<AppState>, Path(event_id): Path<i32>) -> Result<Json<EventTotalMeters>, (StatusCode, String)> {
+    let event = Event::get(&state.db.pool, event_id)
+        .await.map_err(|_| (StatusCode::NOT_FOUND, "This event does not exist".to_string()))?;
+    let event_total_meters = event.get_total_distance(&state.db.pool)
+        .await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Oh noo !".to_string()))?;
 
     Ok(Json(event_total_meters))
 }
