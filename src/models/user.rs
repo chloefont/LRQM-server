@@ -2,6 +2,7 @@ use std::{error::Error, result::Result};
 
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use bigdecimal::BigDecimal;
 
 
 #[derive(Serialize, Deserialize)]
@@ -18,6 +19,11 @@ pub struct UserTotalDistance {
     pub meters: i64
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct UserTotalTime {
+    pub user_id: i32,
+    pub time: BigDecimal
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct NewUser {
@@ -130,6 +136,25 @@ impl User {
         Ok(UserTotalDistance{
             user_id: self.id,
             meters: result.total_meters.unwrap_or(0)
+        })
+    }
+
+    pub async fn get_total_time(
+        self,
+        pool: &PgPool
+    ) -> Result<UserTotalTime, Box<dyn Error>> {
+        let result = sqlx::query!(
+            "
+            SELECT SUM(EXTRACT(EPOCH FROM end_time - start_time)) as total_time
+            FROM measures
+            WHERE user_id = $1
+            ",
+            self.id
+        ).fetch_one(pool).await?;
+
+        Ok(UserTotalTime{
+            user_id: self.id,
+            time: result.total_time.unwrap_or(BigDecimal::from(0))
         })
     }
 }

@@ -1,4 +1,4 @@
-use crate::models::{User, NewUser, UserTotalDistance, Event, NewEvent};
+use crate::models::{User, NewUser, UserTotalDistance, UserTotalTime, Event, NewEvent};
 use crate::{AppState};
 use axum::extract::{Json, Path, State};
 use axum::http::StatusCode;
@@ -18,6 +18,7 @@ pub fn stage(app_state: AppState) -> Router {
         .route("/users", post(user_create).get(users_list))
         .route("/users/:user_id", patch(patch_user).get(get_user))
         .route("/users/:user_id/meters", get(get_user_total_meters))
+        .route("/users/:user_id/time", get(get_user_total_time_spent))
         .with_state(app_state)
 }
 
@@ -87,4 +88,17 @@ async fn get_user_total_meters(
         .await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Oh noo !".to_string()))?;
 
     Ok(Json(total_meters))
+}
+
+async fn get_user_total_time_spent(
+    Path(user_id): Path<i32>,
+    State(state): State<AppState>
+) -> Result<Json<UserTotalTime>, (StatusCode, String)> {
+    let user = User::get(&state.db.pool, user_id)
+        .await.map_err(|_| (StatusCode::NOT_FOUND, "This user does not exist".to_string()))?;
+
+    let total_time: UserTotalTime = user.get_total_time(&state.db.pool)
+        .await.map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Oh noo !".to_string()))?;
+
+    Ok(Json(total_time))
 }

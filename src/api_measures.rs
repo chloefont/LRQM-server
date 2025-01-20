@@ -7,7 +7,7 @@ use crate::AppState;
 pub fn stage(app_state: AppState) -> Router {
     Router::new()
         .route("/measures", post(start_measuring))
-        .route("/measures", put(edit(edit_measure)))
+        .route("/measures", put(edit_measure))
         .with_state(app_state)
 }
 
