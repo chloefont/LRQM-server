@@ -33,7 +33,6 @@ RUN mkdir -p ${APP}
 
 ENV APP_USER=appuser
 
-
 COPY ./migrations ./migrations
 COPY ./start.sh start.sh
 RUN chmod +x start.sh
