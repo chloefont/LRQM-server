@@ -1,17 +1,18 @@
 FROM rust:slim-bullseye AS builder
 
-## Source: https://www.reddit.com/r/rust/comments/1he3woc/sqlx_in_docker_container/
-
 # Set working directory
 WORKDIR /app
 
 # Copy Cargo files separately to leverage Docker caching
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
-COPY ./.env.var ./.env
+COPY ./.env ./.env
 COPY ./src ./src
-COPY ./.sqlx ./.sqlx
 COPY ./migrations ./migrations
+
+# Important, to build without the DB running
+COPY ./.sqlx ./.sqlx
+ENV SQLX_OFFLINE true
 
 # Build the application in release mode
 RUN cargo build --release 
