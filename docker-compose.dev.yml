@@ -1,13 +1,4 @@
 services:
-  api:
-    build: .
-    ports:
-      - "3000:3000"
-    env_file: ".env"
-    restart: always
-    depends_on:
-      - db
-
   adminer:
     image: adminer
     restart: always
@@ -15,11 +6,10 @@ services:
       - db
     ports:
       - 8080:8080
-
-  db:
+  postgres:
     image: postgres:17
-    hostname: db
-    restart: always
+    ports:
+      - 5430:5432
     volumes:
       - ./data:/var/lib/postgresql/data
     environment:
