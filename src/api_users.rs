@@ -1,17 +1,9 @@
-use crate::models::{User, NewUser, UserTotalDistance, UserTotalTime};
+use crate::models::{User, NewUser, UserTotalDistance, UserTotalTime, PatchUser};
 use crate::{AppState};
 use axum::extract::{Json, Path, State};
 use axum::http::StatusCode;
 use axum::{routing::{post, patch, get}, Router};
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct PatchUser {
-    pub username: Option<String>,
-    pub bib_id: Option<String>,
-    pub event_id: Option<i32>,
-    pub total_meters: Option<i32>
-}
 
 pub fn stage(app_state: AppState) -> Router {
     Router::new()
@@ -22,7 +14,17 @@ pub fn stage(app_state: AppState) -> Router {
         .with_state(app_state)
 }
 
-async fn user_create(State(state): State<AppState>, Json(payload): Json<NewUser>) -> Result<Json<User>, (StatusCode, String)> {
+#[utoipa::path(
+    post,
+    path = "/users",
+    description = "Create a user",
+    responses(
+        (status = 200, description = "User created"),
+        (status = 500, description = "Internal server error")
+    ),
+    request_body = NewUser
+)]
+pub async fn user_create(State(state): State<AppState>, Json(payload): Json<NewUser>) -> Result<Json<User>, (StatusCode, String)> {
     let user = User::create(
         &state.db.pool,
         payload.username,
@@ -33,14 +35,35 @@ async fn user_create(State(state): State<AppState>, Json(payload): Json<NewUser>
     Ok(Json(user))
 }
 
-async fn get_user(State(state): State<AppState>, Path(user_id): Path<i32>) -> Result<Json<User>, (StatusCode, String)> {
+#[utoipa::path(
+    get,
+    path = "/users/:user_id",
+    description = "Get a user by id",
+    responses(
+        (status = 200, description = "User found"),
+        (status = 404, description = "User not found")
+    ),
+    params(
+        ("user_id" = i32, Path, description = "The user id")
+    )
+)]
+pub async fn get_user(State(state): State<AppState>, Path(user_id): Path<i32>) -> Result<Json<User>, (StatusCode, String)> {
     let user = User::get(&state.db.pool, user_id)
         .await.map_err(|_| (StatusCode::NOT_FOUND, "This user does not exist".to_string()))?;
 
     Ok(Json(user))
 }
 
-async fn users_list(
+#[utoipa::path(
+    get,
+    description = "Get all users",
+    path = "/users/",
+    responses(
+        (status = 200, description = "Users found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn users_list(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<User>>, (StatusCode, String)> {
     let users = User::all(&state.db.pool)
@@ -49,7 +72,18 @@ async fn users_list(
     Ok(Json(users))
 }
 
-async fn patch_user(
+#[utoipa::path(
+    patch,
+    path = "/users/:user_id",
+    description = "Edit a user",
+    responses(
+        (status = 200, description = "User edited"),
+        (status = 404, description = "User not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    request_body = PatchUser
+)]
+pub async fn patch_user(
     Path(user_id): Path<i32>,
     State(state): State<AppState>,
     Json(payload): Json<PatchUser>
@@ -77,7 +111,20 @@ async fn patch_user(
     Ok(Json(updated_user))
 }
 
-async fn get_user_total_meters(
+#[utoipa::path(
+    get,
+    path = "/users/:user_id/meters",
+    description = "Get the total contribution of a user",
+    responses(
+        (status = 200, description = "Total meters found"),
+        (status = 404, description = "User not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("user_id" = i32, Path, description = "The user id")
+    )
+)]
+pub async fn get_user_total_meters(
     Path(user_id): Path<i32>,
     State(state): State<AppState>
 ) -> Result<Json<UserTotalDistance>, (StatusCode, String)> {
@@ -90,7 +137,20 @@ async fn get_user_total_meters(
     Ok(Json(total_meters))
 }
 
-async fn get_user_total_time_spent(
+#[utoipa::path(
+    get,
+    path = "/users/:user_id/time",
+    description = "Get the total time spent by a user",
+    responses(
+        (status = 200, description = "Total time found"),
+        (status = 404, description = "User not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    params(
+        ("user_id" = i32, Path, description = "The user id")
+    )
+)]
+pub async fn get_user_total_time_spent(
     Path(user_id): Path<i32>,
     State(state): State<AppState>
 ) -> Result<Json<UserTotalTime>, (StatusCode, String)> {

@@ -3,9 +3,9 @@ use std::{error::Error, result::Result};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use bigdecimal::BigDecimal;
+use utoipa::{ToSchema};
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -13,23 +13,31 @@ pub struct User {
     pub event_id: i32
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserTotalDistance {
     pub user_id: i32,
     pub meters: i64
 }
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserTotalTime {
     pub user_id: i32,
+    #[schema(value_type = u128)]
     pub time: BigDecimal
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct NewUser {
     pub username: String,
     pub bib_id: String,
     pub event_id: i32
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct PatchUser {
+    pub username: Option<String>,
+    pub bib_id: Option<String>,
+    pub event_id: Option<i32>,
+    pub total_meters: Option<i32>
 }
 
 impl User {

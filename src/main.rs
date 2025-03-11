@@ -1,5 +1,6 @@
 use axum::Router;
 use db::{PostgresDb};
+use utoipa::{OpenApi};
 use dotenvy::dotenv;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
@@ -9,15 +10,34 @@ mod api_measures;
 mod models;
 mod db;
 
-
 #[derive(Clone)]
 struct AppState {
     pub db: db::PostgresDb,
 }
 
+#[derive(OpenApi)]
+#[openapi(paths(
+    api_events::event_create,
+    api_events::get_event,
+    api_events::events_list,
+    api_events::event_total_meters,
+    api_events::get_event_active_users_number,
+    api_measures::start_measuring,
+    api_measures::edit_meters,
+    api_measures::stop_meters,
+    api_users::user_create,
+    api_users::get_user,
+    api_users::patch_user,
+    api_users::users_list,
+    api_users::get_user_total_meters,
+    api_users::get_user_total_time_spent
+))]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
+    // println!("{}", ApiDoc::openapi().to_pretty_json().unwrap());
+
     dotenv().ok();
     tracing_subscriber::fmt()
         .with_ansi(true)

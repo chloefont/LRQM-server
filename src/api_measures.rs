@@ -13,7 +13,19 @@ pub fn stage(app_state: AppState) -> Router {
         .with_state(app_state)
 }
 
-async fn start_measuring(State(state): State<AppState>, Json(payload): Json<NewMeasure>) -> Result<Json<Measure>, (StatusCode, String)> {
+#[utoipa::path(
+    post,
+    path = "/measures/start",
+    description = "Start measuring",
+    responses(
+        (status = 200, description = "Measure started"),
+        (status = 400, description = "Bad request"),
+        (status = 404, description = "Not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    request_body = NewMeasure
+)]
+pub async fn start_measuring(State(state): State<AppState>, Json(payload): Json<NewMeasure>) -> Result<Json<Measure>, (StatusCode, String)> {
     let user = User::get(&state.db.pool, payload.user_id)
         .await.map_err(|_| (StatusCode::NOT_FOUND, "This user does not exist".to_string()))?;
 
@@ -45,8 +57,19 @@ async fn start_measuring(State(state): State<AppState>, Json(payload): Json<NewM
 }
 
 
-
-async fn edit_meters(State(state): State<AppState>,  Path(measure_id): Path<i32>, Json(payload): Json<EditMeters>) -> Result<Json<Measure>, (StatusCode, String)> {
+#[utoipa::path(
+    put,
+    path = "/measures/:measure_id",
+    description = "Edit meters",
+    responses(
+        (status = 200, description = "Meters edited"),
+        (status = 400, description = "Bad request"),
+        (status = 404, description = "Not found"),
+        (status = 500, description = "Internal server error")
+    ),
+    request_body = EditMeters
+)]
+pub async fn edit_meters(State(state): State<AppState>,  Path(measure_id): Path<i32>, Json(payload): Json<EditMeters>) -> Result<Json<Measure>, (StatusCode, String)> {
     let measure = Measure::get(&state.db.pool, measure_id)
         .await.map_err(|_| (StatusCode::NOT_FOUND, "This measure does not exist".to_string()))?;
 
@@ -69,7 +92,18 @@ async fn edit_meters(State(state): State<AppState>,  Path(measure_id): Path<i32>
     Ok(Json(measure))
 }
 
-async fn stop_meters(State(state): State<AppState>, Path(measure_id): Path<i32>) -> Result<Json<Measure>, (StatusCode, String)> {
+#[utoipa::path(
+    put,
+    path = "/measures/:measure_id/stop",
+    description = "Stop measuring",
+    responses(
+        (status = 200, description = "Measure stopped"),
+        (status = 400, description = "Bad request"),
+        (status = 404, description = "Not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn stop_meters(State(state): State<AppState>, Path(measure_id): Path<i32>) -> Result<Json<Measure>, (StatusCode, String)> {
     let measure = Measure::get(&state.db.pool, measure_id)
     .await.map_err(|_| (StatusCode::NOT_FOUND, "This measure does not exist".to_string()))?;
 

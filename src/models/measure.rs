@@ -4,9 +4,10 @@ use std::error::Error;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use utoipa::ToSchema;
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct Measure {
     pub id: i32,
     pub user_id: i32,
@@ -16,13 +17,13 @@ pub struct Measure {
     pub end_time: Option<NaiveDateTime>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct NewMeasure {
     pub user_id: i32,
     pub contributors_number: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct EditMeters {
     pub meters: i32
 }

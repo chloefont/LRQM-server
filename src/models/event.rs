@@ -2,9 +2,9 @@ use std::error::Error;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use chrono::{NaiveDateTime};
+use utoipa::{ToSchema};
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct Event {
     pub id: i32,
     pub name: String,
@@ -13,19 +13,19 @@ pub struct Event {
     pub meters_goal: i32
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct EventTotalMeters {
     pub event_id: i32,
     pub total_meters: i64
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct EventActiveUsersNumber {
     pub event_id: i32,
     pub active_users_number: i64
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct NewEvent {
     pub name: String,
     pub start_date: NaiveDateTime,
