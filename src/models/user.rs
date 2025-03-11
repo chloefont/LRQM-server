@@ -126,7 +126,7 @@ impl User {
     ) -> Result<UserTotalDistance, Box<dyn Error>> {
         let result = sqlx::query!(
             "
-            SELECT SUM(meters) as total_meters
+            SELECT SUM(meters * contributors_number) as total_meters
             FROM measures
             WHERE user_id = $1
             ",

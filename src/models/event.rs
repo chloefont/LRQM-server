@@ -20,6 +20,12 @@ pub struct EventTotalMeters {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct EventActiveUsersNumber {
+    pub event_id: i32,
+    pub active_users_number: i64
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct NewEvent {
     pub name: String,
     pub start_date: NaiveDateTime,
@@ -107,6 +113,27 @@ impl Event {
         Ok(EventTotalMeters{
             event_id: self.id,
             total_meters: event_total_meters.sum.unwrap_or(0)
+        })
+    }
+
+    pub async fn get_active_users_number(self, pool: &PgPool) -> Result<EventActiveUsersNumber, Box<dyn Error>> {
+        let active_users_number = sqlx::query!(
+            "
+            SELECT COUNT(u.id) as active_users_number
+            FROM users u
+            INNER JOIN events e 
+                ON e.id = u.event_id
+                AND e.id = $1
+            INNER JOIN measures m
+                ON m.user_id = u.id
+            WHERE m.end_time IS NOT NULL
+            ",
+            self.id
+        ).fetch_one(pool).await?;
+        
+        Ok(EventActiveUsersNumber{
+            event_id: self.id,
+            active_users_number: active_users_number.active_users_number.unwrap_or(0)
         })
     }
 }
