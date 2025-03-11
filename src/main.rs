@@ -1,5 +1,3 @@
-use std::{sync::{Arc, Mutex}, thread};
-
 use axum::Router;
 use db::{PostgresDb};
 use dotenvy::dotenv;

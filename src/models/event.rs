@@ -99,7 +99,7 @@ impl Event {
     pub async fn get_total_distance(self, pool: &PgPool) -> Result<EventTotalMeters, Box<dyn Error>> {
         let event_total_meters = sqlx::query!(
             "
-            SELECT SUM(m.meters) as sum
+            SELECT SUM(m.meters * m.contributors_number) as sum
             FROM users u
             INNER JOIN events e 
                 ON e.id = u.event_id

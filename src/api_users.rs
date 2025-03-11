@@ -1,4 +1,4 @@
-use crate::models::{User, NewUser, UserTotalDistance, UserTotalTime, Event, NewEvent};
+use crate::models::{User, NewUser, UserTotalDistance, UserTotalTime};
 use crate::{AppState};
 use axum::extract::{Json, Path, State};
 use axum::http::StatusCode;
