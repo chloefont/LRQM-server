@@ -6,19 +6,17 @@ services:
     env_file: ".env"
     restart: always
     depends_on:
-      - db
-
+      - postgres
   adminer:
     image: adminer
     restart: always
     depends_on:
-      - db
+      - postgres
     ports:
       - 8080:8080
 
-  db:
+  postgres:
     image: postgres:17
-    hostname: db
     restart: always
     volumes:
       - ./data:/var/lib/postgresql/data
