@@ -10,12 +10,10 @@ COPY ./.env ./.env
 COPY ./src ./src
 COPY ./migrations ./migrations
 
-# Important, to build without the DB running
-COPY ./.sqlx ./.sqlx
-ENV SQLX_OFFLINE=true
-
 # Install SQLX
 RUN cargo install sqlx-cli --no-default-features --features postgres
+RUN sqlx database create
+RUN sqlx migrate run
 
 # Build the application in release mode
 RUN cargo build --release 
