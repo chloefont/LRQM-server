@@ -24,4 +24,5 @@ tracing-subscriber = {version = "0.3.19", features = [
 ]}
 bigdecimal = { version = "0.4.7", features = ["serde"] }
 tower-http = { version = "0.5", features = ["trace"] }
-utoipa = "5"
+utoipa = { version = "5", features = ["chrono"] }
+utoipa-axum = "0.2"

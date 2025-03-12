@@ -2,9 +2,9 @@ use std::error::Error;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use chrono::{NaiveDateTime};
+use utoipa::{ToSchema};
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct Event {
     pub id: i32,
     pub name: String,
@@ -13,13 +13,19 @@ pub struct Event {
     pub meters_goal: i32
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct EventTotalMeters {
     pub event_id: i32,
     pub total_meters: i64
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct EventActiveUsersNumber {
+    pub event_id: i32,
+    pub active_users_number: i64
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct NewEvent {
     pub name: String,
     pub start_date: NaiveDateTime,
@@ -93,7 +99,7 @@ impl Event {
     pub async fn get_total_distance(self, pool: &PgPool) -> Result<EventTotalMeters, Box<dyn Error>> {
         let event_total_meters = sqlx::query!(
             "
-            SELECT SUM(m.meters) as sum
+            SELECT SUM(m.meters * m.contributors_number) as sum
             FROM users u
             INNER JOIN events e 
                 ON e.id = u.event_id
@@ -107,6 +113,27 @@ impl Event {
         Ok(EventTotalMeters{
             event_id: self.id,
             total_meters: event_total_meters.sum.unwrap_or(0)
+        })
+    }
+
+    pub async fn get_active_users_number(self, pool: &PgPool) -> Result<EventActiveUsersNumber, Box<dyn Error>> {
+        let active_users_number = sqlx::query!(
+            "
+            SELECT COUNT(u.id) as active_users_number
+            FROM users u
+            INNER JOIN events e 
+                ON e.id = u.event_id
+                AND e.id = $1
+            INNER JOIN measures m
+                ON m.user_id = u.id
+            WHERE m.end_time IS NOT NULL
+            ",
+            self.id
+        ).fetch_one(pool).await?;
+        
+        Ok(EventActiveUsersNumber{
+            event_id: self.id,
+            active_users_number: active_users_number.active_users_number.unwrap_or(0)
         })
     }
 }
