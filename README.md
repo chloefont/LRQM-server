@@ -39,6 +39,30 @@ Run the server
 cargo run
 ```
 
+## Deploy
+
+*Ensure the .env file is properly configured.*
+
+Run the docker-compose dev file
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Build the app container
+```bash
+docker build .
+```
+
+Stop the docker-compose dev
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+Launch the app
+```bash
+docker compose up -d
+```
+
 ## Api documentation
 
 ```json
